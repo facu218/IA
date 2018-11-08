@@ -15,16 +15,16 @@ def RobotEnOrilla(pos):
 def DistanciaOrillaCercana(pos):
     #Dada una posicion, busca la menor distancia a una orilla
     fila, columna = pos
-    menorDistancia = 0
+    menorDistancia = 5
 
     if abs(0 - fila) < menorDistancia:
         menorDistancia = abs(0-fila)
     if abs(5 - fila) < menorDistancia:
         menorDistancia = abs(5-fila)
     if abs(0 - columna) < menorDistancia:
-        menorDistancia = abs(0-fila)
+        menorDistancia = abs(0-columna)
     if abs(5 - columna) < menorDistancia:
-        menorDistancia = abs(5-fila)
+        menorDistancia = abs(5-columna)
 
     return menorDistancia
 
@@ -101,18 +101,15 @@ class RescateHieloProblem(SearchProblem):
 
     def heuristic(self, state):
         '''Calculo la suma de la distancia del robot hasta la persona mas lejana,
-            desde alli a la persona mas cercana
-            mas la distancia de la ultima con la orilla mas cercana'''
+            + la distancia hasta la orilla mas cercana, + la cantidad de personas restantes'''
 
         filaRobot, columnaRobot = state[0]
         posicionPersonas = list(state[2])
         distanciaMax = 0
-        distanciaMin = 100
         posicionMasLejano = []
-        posicionMasCercano = []
 
-        if len(posicionPersonas)> 1:
-            #Distancia hasta persona mas lejana + distancia de ese a su mas cercano + distancia orilla cercana
+        if len(posicionPersonas)> 0:
+            #Distancia hasta persona mas lejana + distancia orilla cercana + personas restantes
             for p in posicionPersonas:
                 distancia = abs(filaRobot - p[0]) + abs(columnaRobot - p[1])
                 if distancia > distanciaMax:
@@ -120,23 +117,10 @@ class RescateHieloProblem(SearchProblem):
                     posicionMasLejano = (p[0], p[1])
             posicionPersonas.remove(posicionMasLejano)
 
-            for p in posicionPersonas:
-                distancia = abs(posicionMasLejano[0] - p[0]) + abs(posicionMasLejano[1] - p[1])
-                if distancia < distanciaMin:
-                    distanciaMin = distancia
-                    posicionMasCercano = (p[0], p[1])
+            distanciaSalida = DistanciaOrillaCercana(posicionMasLejano)
 
-            distanciaSalida = DistanciaOrillaCercana(posicionMasCercano)
-
-            return distanciaMax + distanciaMin + distanciaSalida
-
-        elif len(posicionPersonas) == 1:
-            #Queda solo una persona. Distancia hasta persona mas lejana + distancia orilla cercana
-            distancia = abs(filaRobot - posicionPersonas[0][0]) + abs(columnaRobot - posicionPersonas[0][1])
-            distanciaSalida = DistanciaOrillaCercana(posicionPersonas[0])
-
-            return  distancia + distanciaSalida
-
+            return distanciaMax + distanciaSalida + len(posicionPersonas)
+        
         else:
             #No quedan personas por rescatar. Distancia hasta la orilla mas cercana
             return DistanciaOrillaCercana((filaRobot,columnaRobot))
